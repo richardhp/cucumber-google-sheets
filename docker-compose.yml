@@ -1,0 +1,11 @@
+# This is an example docker-compose file
+version: "3.4"
+
+services:
+  cucumber_reporter:
+    image: cucumber-google-sheets:latest
+    volumes:
+      - ./cucumber-messages.json:/data/cucumber-messages.json
+    environment:
+      - GOOGLE_SHEET=https://docs.google.com/spreadsheets/d/SHEET_ID
+      - GOOGLE_API_KEY=abc

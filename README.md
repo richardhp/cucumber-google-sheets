@@ -1,2 +1,5 @@
-# cucumber-google-sheets
-Parse cucumber messages and push them to a google sheet
+# Cucumber Google Sheets
+
+This project will produce a docker image that can be run to process Cucumber messages in the [ndjson format](http://ndjson.org/).
+
+It will then post them to a google spreadsheet
