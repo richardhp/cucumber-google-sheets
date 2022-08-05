@@ -10,9 +10,8 @@ Future<Map> readJsonFile(String filePath) async {
 
 Future<auth_io.AuthClient> obtainAuthenticatedClient() async {
   Map json = await readJsonFile('/data/google-api-keys.json');
-  print(json);
   final accountCredentials = auth_io.ServiceAccountCredentials.fromJson(json);
-  List<String> scopes = [];
+  List<String> scopes = ['https://www.googleapis.com/auth/spreadsheets'];
 
   auth_io.AuthClient client = await auth_io.clientViaServiceAccount(accountCredentials, scopes);
 

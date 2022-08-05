@@ -1,12 +1,18 @@
-import 'dart:io';
-import 'package:googleapis_auth/auth_io.dart' as auth_io;
+import 'package:googleapis/sheets/v4.dart' as google_sheets;
+
 import 'package:cucumber_google_sheets/cucumber_google_sheets.dart' as cucumber_google_sheets;
 import 'package:cucumber_google_sheets/google_auth.dart' as google_auth;
+import 'package:cucumber_google_sheets/config.dart' as config;
 
 void main(List<String> arguments) async {
-  auth_io.AuthClient client = await google_auth.obtainAuthenticatedClient();
-  Map<String, String> env = Platform.environment;
-  
-  print('Hello world: ${cucumber_google_sheets.calculate()}! ${env['GOOGLE_SHEET_ID']}');
-  // await client.close();
+  final env = new config.Config();
+  final client = await google_auth.obtainAuthenticatedClient();
+  final api = google_sheets.SheetsApi(client);
+  final spreadsheet = await api.spreadsheets.get(env.GOOGLE_SHEET_ID);
+  final sheets = spreadsheet.sheets;
+
+  if (sheets != null) {
+    print('We have: ${sheets.length} sheets in sheet: ${env.GOOGLE_SHEET_ID}');
+  }
+  client.close();
 }

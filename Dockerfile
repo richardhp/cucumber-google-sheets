@@ -8,6 +8,7 @@ RUN dart pub get
 COPY . .
 RUN dart compile exe ./bin/cucumber_google_sheets.dart -o ./bin/cucumber_google_sheets
 
-FROM subfuzion/dart-scratch
+FROM scratch as runner
+COPY --from=builder /runtime/ /
 COPY --from=builder /app/bin/cucumber_google_sheets /app/cucumber_google_sheets
 ENTRYPOINT ["/app/cucumber_google_sheets"]

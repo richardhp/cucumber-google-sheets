@@ -4,7 +4,6 @@ version: "3.4"
 services:
   cucumber_reporter:
     image: cucumber-google-sheets:latest
-    network_mode: host
     volumes:
       - ./cucumber-messages.json:/data/cucumber-messages.json
       - ./google-api-keys.json:/data/google-api-keys.json
@@ -13,4 +12,3 @@ services:
       - GOOGLE_SHEET_ID=1qOOvhfOXmeh-ERCY9gXINQVa2Yn_gMkCxs1VW5DPx9c
       - OUTPUT_CSV=false
       - OUTPUT_GOOGLE=true
-
