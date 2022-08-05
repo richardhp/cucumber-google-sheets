@@ -11,6 +11,6 @@ class Config {
         throw '${envVar} missing from env';
       }
     }
-    this.GOOGLE_SHEET_ID = env['GOOGLE_SHEET_ID']!;
+    GOOGLE_SHEET_ID = env['GOOGLE_SHEET_ID']!;
   }
 }

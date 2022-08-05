@@ -1,6 +1,5 @@
 import 'package:googleapis/sheets/v4.dart' as google_sheets;
 
-import 'package:cucumber_google_sheets/cucumber_google_sheets.dart' as cucumber_google_sheets;
 import 'package:cucumber_google_sheets/google_auth.dart' as google_auth;
 import 'package:cucumber_google_sheets/config.dart' as config;
 
