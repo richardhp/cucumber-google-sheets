@@ -1,11 +1,11 @@
-import 'dart:convert';
-import 'dart:io';
+import 'dart:convert' as convert;
+import 'dart:io' as io;
 import 'package:googleapis_auth/auth_io.dart' as auth_io;
 
 /// This will load a json file and decode it
 Future<Map> readJsonFile(String filePath) async {
-  var input = await File(filePath).readAsString();
-  return jsonDecode(input);
+  var input = await io.File(filePath).readAsString();
+  return convert.jsonDecode(input);
 }
 
 /// This will parse the json settings file and use it to create a client to google
