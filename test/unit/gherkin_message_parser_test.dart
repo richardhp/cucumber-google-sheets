@@ -9,9 +9,17 @@ void main() {
     expect(lib.getMessageType(convert.jsonDecode(rawMessage)), fp.Either.right(lib.MessageType.meta));
   });
 
-  test('decodeMessages', () {
-    final rawMessages = '{"meta": "hello"}\n{"number": 32}';
-    final decoded = lib.decodeMessages(rawMessages);
-    expect(decoded.getRight().getOrElse(() => <Map<String, dynamic>>[])[0]['meta'], 'hello');
+  group('decodeMessages', () {
+    test('valid messages', () {
+      final rawMessages = '{"meta": "hello"}\n{"number": 32}';
+      final decoded = lib.decodeMessages(rawMessages);
+      expect(decoded.getRight().getOrElse(() => <Map<String, dynamic>>[])[0]['meta'], 'hello');
+    });
+
+    test('invalid messages', () {
+      final rawMessages = '{"meta": "hello"}\n[{"number": 32}]';
+      final decoded = lib.decodeMessages(rawMessages);
+      expect(decoded.isLeft(), true);
+    });
   });
 }

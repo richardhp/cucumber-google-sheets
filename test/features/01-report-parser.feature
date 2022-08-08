@@ -1,6 +1,7 @@
 Feature: Report Parser
   This will load in a report in the ndjson format and extract the data we need.  By using the standard message format this makes this feature compatible with any cucumber implementation in any language
 
+  @manual
   Scenario: Ingest output from another tool
     Given I have some feature specs
     And I have run them in the language / tool of my choice

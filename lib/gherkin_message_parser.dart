@@ -88,14 +88,13 @@ fp.TaskEither<String, String> loadMessageFile() {
 fp.Either<String, List<dynamic>> decodeMessages(String messageData) {
   try {
     final lines = messageData.split('\n');
-    final decodedMessages = utils_fp
+    return utils_fp
     .sequenceEither(
       lines
         .map(convert.jsonDecode)
         .map(utils_map.pseudoJsonToTrueJson)
         .toList()
     );
-    return decodedMessages;
     // Each message must be a true json document in its own right
   } catch (e) {
     return fp.Either.left('Failed to decode messages');
@@ -113,8 +112,11 @@ fp.Either<String, MessageType> getMessageType(Map<String, dynamic> message) {
   }
 }
 
-
-
-String consumeMessage(String json) {
+/// This will ignore message types that we don't care about, so they can be filtered out
+String consumeMessage(Map<String, dynamic> message) {
+  final t = getMessageType(message);
+  if (t == MessageType.meta) {
+    
+  }
   return '';
 }
