@@ -3,48 +3,48 @@ import 'dart:io';
 import 'dart:convert';
 import 'package:cucumber_google_sheets/utils/map.dart' as utils_map;
 import 'package:gherkin/gherkin.dart';
-import 'package:googleapis/mybusinessverifications/v1.dart';
 
 /*
 done:
 Duration
 Location
 Comment
+Git
+Product
+ParameterType
+PickleDocString
+PickleTableCell
+PickleTag
+
+Source
+Attachment
+Ci
+Meta
+Tag
+DocString
+TableCell
+TableRow
+DataTable
+Step
+Background
+Examples
 
 do these:
 
-Attachment
 Envelope
 GherkinDocument
-Background
-DataTable
-DocString
-Examples
 Feature
 FeatureChild
 Rule
 RuleChild
 Scenario
-Step
-TableCell
-TableRow
-Tag
 Hook
-Meta
-Ci
-Git
-Product
-ParameterType
 ParseError
 Pickle
-PickleDocString
 PickleStep
 PickleStepArgument
 PickleTable
-PickleTableCell
 PickleTableRow
-PickleTag
-Source
 SourceReference
 JavaMethod
 JavaStackTraceElement
@@ -76,6 +76,26 @@ TestStepResultStatus
 
 abstract class CucumberMessage {
   Map<String, Object?> encode();
+}
+
+class IdNameDescriptionKeywordMessage implements CucumberMessage {
+  String id;
+  String name;
+  String description;
+  String keyword;
+
+  IdNameDescriptionKeywordMessage(
+      this.id, this.name, this.description, this.keyword);
+
+  @override
+  Map<String, Object?> encode() {
+    return {
+      'id': id,
+      'name': name,
+      'description': description,
+      'keyword': keyword,
+    };
+  }
 }
 
 /// Base types
@@ -143,31 +163,116 @@ class ProductMessage implements CucumberMessage {
   }
 }
 
-class ParameterTypeMessage {
+class ParameterTypeMessage extends CucumberMessage {
   String id;
   String name;
   List<String> regularExpressions;
   bool preferForRegularExpressionMatch;
   bool useForSnippets;
+
   ParameterTypeMessage(this.id, this.name, this.regularExpressions,
       this.preferForRegularExpressionMatch, this.useForSnippets);
+
+  @override
+  Map<String, Object?> encode() {
+    return {
+      'id': id,
+      'name': name,
+      'regularExpressions': regularExpressions,
+      'preferForRegularExpressionMatch': preferForRegularExpressionMatch,
+      'useForSnippets': useForSnippets,
+    };
+  }
 }
 
-class PickleDocStringMessage {
+class PickleDocStringMessage extends CucumberMessage {
   String content;
   String? mediaType;
+
   PickleDocStringMessage(this.content, [this.mediaType]);
+
+  @override
+  Map<String, Object?> encode() {
+    return {
+      'content': content,
+      'mediaType': mediaType,
+    };
+  }
 }
 
-class PickleTableCell {
+class TableCellMessage extends CucumberMessage {
   String value;
-  PickleTableCell(this.value);
+  LocationMessage location;
+
+  TableCellMessage(this.value, this.location);
+
+  @override
+  Map<String, Object?> encode() {
+    return {
+      'value': value,
+      'location': location.encode(),
+    };
+  }
 }
 
-class PickleTagMesssage {
+class TableRowMessage extends CucumberMessage {
+  String id;
+  LocationMessage location;
+  List<TableCellMessage> cells;
+
+  TableRowMessage(this.id, this.location, this.cells);
+
+  @override
+  Map<String, Object?> encode() {
+    return {
+      'id': id,
+      'location': location.encode(),
+      'cells': cells.map((c) => c.encode()),
+    };
+  }
+}
+
+class DataTableMessage extends CucumberMessage {
+  LocationMessage location;
+  List<TableRowMessage> rows;
+
+  DataTableMessage(this.location, this.rows);
+
+  @override
+  Map<String, Object?> encode() {
+    return {
+      'location': location.encode(),
+      'rows': rows.map((r) => r.encode()),
+    };
+  }
+}
+
+class PickleTableCell extends CucumberMessage {
+  String value;
+
+  PickleTableCell(this.value);
+
+  @override
+  Map<String, Object?> encode() {
+    return {
+      'value': value,
+    };
+  }
+}
+
+class PickleTagMesssage extends CucumberMessage {
   String astNodeId;
   String name;
+
   PickleTagMesssage(this.astNodeId, this.name);
+
+  @override
+  Map<String, Object?> encode() {
+    return {
+      'astNodeId': astNodeId,
+      'name': name,
+    };
+  }
 }
 
 enum AttachmentContentEncoding {
@@ -232,7 +337,7 @@ enum TestStepResultStatus {
 
 /// Complex types
 
-class AttachmentMessage {
+class AttachmentMessage implements CucumberMessage {
   String body;
   AttachmentContentEncoding contentEncoding;
   String mediaType;
@@ -241,12 +346,27 @@ class AttachmentMessage {
   String? testStepId;
   String? url;
   SourceMessage? source;
+
   AttachmentMessage(this.body, this.contentEncoding, this.mediaType,
       [this.fileName,
       this.testCaseStartedId,
       this.testStepId,
       this.url,
       this.source]);
+
+  @override
+  Map<String, Object?> encode() {
+    return {
+      'body': body,
+      'contentEncoding': contentEncoding,
+      'mediaType': mediaType,
+      'fileName': fileName,
+      'testCaseStartedId': testCaseStartedId,
+      'testStepId': testStepId,
+      'url': url,
+      'source': source,
+    };
+  }
 }
 
 class CIMessage implements CucumberMessage {
@@ -320,7 +440,7 @@ class SourceMessage implements CucumberMessage {
 /// Each `PickleStep` of a `Pickle` is matched with a `StepDefinition` to create a `TestCase`
 class PickleMessage {}
 
-class CommentMessage {
+class CommentMessage implements CucumberMessage {
   String text;
   LocationMessage location;
 
@@ -330,7 +450,7 @@ class CommentMessage {
   Map<String, Object?> encode() {
     return {
       'text': text,
-      'location': location,
+      'location': location.encode(),
     };
   }
 }
@@ -347,55 +467,149 @@ class FeatureMessage2 {
       this.keyword, this.language, this.children);
 }
 
-class TagMessage {
+class TagMessage implements CucumberMessage {
   String id;
   String name;
   LocationMessage location;
+
   TagMessage(this.id, this.name, this.location);
+
+  @override
+  Map<String, Object?> encode() {
+    return {
+      'id': id,
+      'name': name,
+      'location': location.encode(),
+    };
+  }
 }
-class DocStringMessage {
-  Location location;
+
+class DocStringMessage implements CucumberMessage {
+  LocationMessage location;
   String delimeter;
   String content;
   String? mediaType;
 
-  DocStringMessage(this.location, this.delimeter, this.content, [this.mediaType]);
+  DocStringMessage(this.location, this.delimeter, this.content,
+      [this.mediaType]);
+
+  @override
+  Map<String, Object?> encode() {
+    return {
+      'location': location.encode(),
+      'delimeter': delimeter,
+      'content': content,
+      'mediaType': mediaType,
+    };
+  }
 }
 
-class StepMessage2 {
+class StepMessage2 implements CucumberMessage {
+  String id;
   LocationMessage location;
   String keyword;
   String text;
+
   StepKeywordType? keywordType;
   DocStringMessage? docString;
+  DataTableMessage? dataTable;
 
+  StepMessage2(this.id, this.location, this.keyword, this.text,
+      [this.keywordType, this.docString, this.dataTable]);
+
+  @override
+  Map<String, Object?> encode() {
+    return {
+      'id': id,
+      'location': location.encode(),
+      'keyword': keyword,
+      'text': text,
+      'keywordType': keywordType,
+      'docString': docString?.encode(),
+      'dataTable': dataTable?.encode(),
+    };
+  }
 }
-class BackgroundMessage {
+
+class BackgroundMessage extends IdNameDescriptionKeywordMessage
+    implements CucumberMessage {
   LocationMessage location;
-  String keyword;
-  String name;
-  String description;
-  String id;
   List<StepMessage2> steps;
-  BackgroundMessage(this.location, this.keyword, this.name, this.description, this.id, this.steps);
-}
-class RuleChildMessage {
-  BackgroundMessage
+
+  BackgroundMessage(String id, String name, String description, String keyword,
+      this.location, this.steps)
+      : super(id, name, description, keyword);
+
+  @override
+  Map<String, Object?> encode() {
+    return {
+      ...super.encode(),
+      'location': location.encode(),
+      'steps': steps.map((s) => s.encode()),
+    };
+  }
 }
 
-class RuleMessage {
+class RuleChildMessage {
+  // BackgroundMessage
+}
+
+class ScenarioMessage2 {
   String id;
-  String keyword;
   String name;
-  String description;
+}
+
+class RuleMessage extends IdNameDescriptionKeywordMessage {
   LocationMessage location;
   List<TagMessage> tags;
   List<RuleChildMessage> children;
-  RuleMessage(this.id, this.keyword, this.name, this.description, this.location,
-      this.tags, this.children);
+
+  RuleMessage(String id, String name, String description, String keyword,
+      this.location, this.tags, this.children)
+      : super(id, name, description, keyword);
+
+  @override 
+  Map<String, Object?> encode() {
+    return {
+      ...super.encode(),
+      'location': location.encode(),
+      'tags': tags.map((t) => t.encode()),
+      'children': children.map((c) => c.encode()),
+    }
+  }
 }
 
 class FeatureChildMessage {}
+
+class ExamplesMessage implements CucumberMessage {
+  String id;
+  String name;
+  String description;
+  String keyword;
+  LocationMessage location;
+  List<TagMessage> tags;
+  List<TableRowMessage> tableBody;
+
+  TableRowMessage? tableHeader;
+
+  ExamplesMessage(this.id, this.name, this.description, this.keyword,
+      this.location, this.tags, this.tableBody,
+      [this.tableHeader]);
+
+  @override
+  Map<String, Object?> encode() {
+    return {
+      'id': id,
+      'name': name,
+      'description': description,
+      'keyword': keyword,
+      'location': location.encode(),
+      'tags': tags.map((t) => t.encode()),
+      'tableBody': tableBody.map((t) => t.encode()),
+      'tableHeader': tableHeader?.encode(),
+    };
+  }
+}
 
 class GherkinDocumentMessage {
   List<CommentMessage> comments = [];
