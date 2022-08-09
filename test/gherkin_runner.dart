@@ -7,6 +7,7 @@ import 'package:gherkin/gherkin.dart';
 /*
 done:
 Duration
+Timestamp
 Location
 Comment
 Git
@@ -15,6 +16,8 @@ ParameterType
 PickleDocString
 PickleTableCell
 PickleTag
+JavaMethod
+JavaStackTraceElement
 
 Source
 Attachment
@@ -28,6 +31,9 @@ DataTable
 Step
 Background
 Examples
+Scenario
+RuleChild
+SourceReference
 
 do these:
 
@@ -36,8 +42,6 @@ GherkinDocument
 Feature
 FeatureChild
 Rule
-RuleChild
-Scenario
 Hook
 ParseError
 Pickle
@@ -45,9 +49,6 @@ PickleStep
 PickleStepArgument
 PickleTable
 PickleTableRow
-SourceReference
-JavaMethod
-JavaStackTraceElement
 StepDefinition
 StepDefinitionPattern
 TestCase
@@ -62,7 +63,6 @@ TestRunStarted
 TestStepFinished
 TestStepResult
 TestStepStarted
-Timestamp
 UndefinedParameterType
 
 enums
@@ -78,6 +78,7 @@ abstract class CucumberMessage {
   Map<String, Object?> encode();
 }
 
+/// DRY Classes
 class IdNameDescriptionKeywordMessage implements CucumberMessage {
   String id;
   String name;
@@ -98,12 +99,11 @@ class IdNameDescriptionKeywordMessage implements CucumberMessage {
   }
 }
 
-/// Base types
-class DurationMessage extends CucumberMessage {
+class TimeMessage implements CucumberMessage {
   int seconds;
   int nanos;
 
-  DurationMessage(this.seconds, this.nanos);
+  TimeMessage(this.seconds, this.nanos);
 
   @override
   Map<String, Object?> encode() {
@@ -114,7 +114,34 @@ class DurationMessage extends CucumberMessage {
   }
 }
 
-class LocationMessage extends CucumberMessage {
+/// Base types
+
+class JavaStackTraceElementMessage implements CucumberMessage {
+  String className;
+  String fileName;
+  String methodName;
+
+  JavaStackTraceElementMessage(this.className, this.fileName, this.methodName);
+
+  @override
+  Map<String, Object?> encode() {
+    return {
+      'className': className,
+      'fileName': fileName,
+      'methodName': methodName,
+    };
+  }
+}
+
+class DurationMessage extends TimeMessage {
+  DurationMessage(int seconds, int nanos) : super(seconds, nanos);
+}
+
+class TimestampMessage extends TimeMessage {
+  TimestampMessage(int seconds, int nanos) : super(seconds, nanos);
+}
+
+class LocationMessage implements CucumberMessage {
   int line;
   int? column;
 
@@ -163,7 +190,7 @@ class ProductMessage implements CucumberMessage {
   }
 }
 
-class ParameterTypeMessage extends CucumberMessage {
+class ParameterTypeMessage implements CucumberMessage {
   String id;
   String name;
   List<String> regularExpressions;
@@ -185,7 +212,27 @@ class ParameterTypeMessage extends CucumberMessage {
   }
 }
 
-class PickleDocStringMessage extends CucumberMessage {
+class SourceReferenceMessage implements CucumberMessage {
+  String? uri;
+  JavaMethodMessage? javaMethod;
+  JavaStackTraceElementMessage? javaStackTraceElement;
+  LocationMessage? location;
+
+  SourceReferenceMessage(
+      this.uri, this.javaMethod, this.javaStackTraceElement, this.location);
+
+  @override
+  Map<String, Object?> encode() {
+    return {
+      'uri': uri,
+      'javaMethod': javaMethod?.encode(),
+      'javaStackTraceElement': javaStackTraceElement?.encode(),
+      'location': location?.encode(),
+    };
+  }
+}
+
+class PickleDocStringMessage implements CucumberMessage {
   String content;
   String? mediaType;
 
@@ -200,7 +247,24 @@ class PickleDocStringMessage extends CucumberMessage {
   }
 }
 
-class TableCellMessage extends CucumberMessage {
+class JavaMethodMessage implements CucumberMessage {
+  String className;
+  String methodName;
+  List<String> methodParameterTypes;
+
+  JavaMethodMessage(this.className, this.methodName, this.methodParameterTypes);
+
+  @override
+  Map<String, Object?> encode() {
+    return {
+      'className': className,
+      'methodName': methodName,
+      'methodParameterTypes': methodParameterTypes,
+    };
+  }
+}
+
+class TableCellMessage implements CucumberMessage {
   String value;
   LocationMessage location;
 
@@ -215,7 +279,7 @@ class TableCellMessage extends CucumberMessage {
   }
 }
 
-class TableRowMessage extends CucumberMessage {
+class TableRowMessage implements CucumberMessage {
   String id;
   LocationMessage location;
   List<TableCellMessage> cells;
@@ -232,7 +296,7 @@ class TableRowMessage extends CucumberMessage {
   }
 }
 
-class DataTableMessage extends CucumberMessage {
+class DataTableMessage implements CucumberMessage {
   LocationMessage location;
   List<TableRowMessage> rows;
 
@@ -247,7 +311,7 @@ class DataTableMessage extends CucumberMessage {
   }
 }
 
-class PickleTableCell extends CucumberMessage {
+class PickleTableCell implements CucumberMessage {
   String value;
 
   PickleTableCell(this.value);
@@ -260,7 +324,7 @@ class PickleTableCell extends CucumberMessage {
   }
 }
 
-class PickleTagMesssage extends CucumberMessage {
+class PickleTagMesssage implements CucumberMessage {
   String astNodeId;
   String name;
 
@@ -550,13 +614,42 @@ class BackgroundMessage extends IdNameDescriptionKeywordMessage
   }
 }
 
-class RuleChildMessage {
-  // BackgroundMessage
+class RuleChildMessage implements CucumberMessage {
+  BackgroundMessage background;
+  ScenarioMessage2 scenario;
+
+  RuleChildMessage(this.background, this.scenario);
+
+  @override
+  Map<String, Object?> encode() {
+    return {
+      'background': background.encode(),
+      'scenario': scenario.encode(),
+    };
+  }
 }
 
-class ScenarioMessage2 {
-  String id;
-  String name;
+class ScenarioMessage2 extends IdNameDescriptionKeywordMessage
+    implements CucumberMessage {
+  LocationMessage location;
+  List<TagMessage> tags;
+  List<StepMessage2> steps;
+  List<ExamplesMessage> examples;
+
+  ScenarioMessage2(String id, String name, String description, String keyword,
+      this.location, this.tags, this.steps, this.examples)
+      : super(id, name, description, keyword);
+
+  @override
+  Map<String, Object?> encode() {
+    return {
+      ...super.encode(),
+      'location': location.encode(),
+      'tags': tags.map((t) => t.encode()),
+      'steps': steps.map((s) => s.encode()),
+      'examples': examples.map((e) => e.encode()),
+    };
+  }
 }
 
 class RuleMessage extends IdNameDescriptionKeywordMessage {
@@ -568,14 +661,14 @@ class RuleMessage extends IdNameDescriptionKeywordMessage {
       this.location, this.tags, this.children)
       : super(id, name, description, keyword);
 
-  @override 
+  @override
   Map<String, Object?> encode() {
     return {
       ...super.encode(),
       'location': location.encode(),
       'tags': tags.map((t) => t.encode()),
       'children': children.map((c) => c.encode()),
-    }
+    };
   }
 }
 
