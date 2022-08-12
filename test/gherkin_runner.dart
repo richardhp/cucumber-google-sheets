@@ -34,6 +34,9 @@ Examples
 Scenario
 RuleChild
 SourceReference
+StepDefinition
+StepDefinitionPattern
+ParseError
 
 do these:
 
@@ -43,14 +46,11 @@ Feature
 FeatureChild
 Rule
 Hook
-ParseError
 Pickle
 PickleStep
 PickleStepArgument
 PickleTable
 PickleTableRow
-StepDefinition
-StepDefinitionPattern
 TestCase
 Group
 StepMatchArgument
@@ -324,6 +324,38 @@ class PickleTableCell implements CucumberMessage {
   }
 }
 
+class StepDefinitionPatternMessage2 implements CucumberMessage {
+  String source;
+  StepDefinitionPatternType type;
+
+  StepDefinitionPatternMessage2(this.source, this.type);
+
+  @override
+  Map<String, Object?> encode() {
+    return {
+      'source': source,
+      'type': type,
+    };
+  }
+}
+
+class StepDefinitionMessage implements CucumberMessage {
+  String id;
+  StepDefinitionPatternMessage2 pattern;
+  SourceReferenceMessage sourceReference;
+
+  StepDefinitionMessage(this.id, this.pattern, this.sourceReference);
+
+  @override
+  Map<String, Object?> encode() {
+    return {
+      'id': id,
+      'pattern': pattern,
+      'sourceReference': sourceReference.encode(),
+    };
+  }
+}
+
 class PickleTagMesssage implements CucumberMessage {
   String astNodeId;
   String name;
@@ -400,6 +432,21 @@ enum TestStepResultStatus {
 }
 
 /// Complex types
+
+class ParseErrorMessage implements CucumberMessage {
+  String message;
+  SourceReferenceMessage source;
+
+  ParseErrorMessage(this.message, this.source);
+
+  @override
+  Map<String, Object?> encode() {
+    return {
+      'message': message,
+      'source': source.encode(),
+    };
+  }
+}
 
 class AttachmentMessage implements CucumberMessage {
   String body;
